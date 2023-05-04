@@ -1,0 +1,18 @@
+tasks:
+  Scrape:
+    shell: python scrape.py
+  Transform:
+    shell: python transform.py
+  Download Images:
+    shell: python download_images.py
+  Save Spreadsheet:
+    shell: python save_spreadsheet.py
+
+artifactsDir: output
+condaConfigFile: conda.yaml
+PATH:
+  - .
+PYTHONPATH:
+  - .
+ignoreFiles:
+  - .gitignore

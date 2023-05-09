@@ -19,12 +19,10 @@ class Results(Page):
         dropdown_element = self.webdriver.find_element(self.SECTION_DROPDOWN_LOCATOR)
         self.webdriver.click_element(self.SECTION_DROPDOWN_LOCATOR)
         for section in sections:
-            try:
-                # Identify the checkbox element to click by the start of the value property
-                self.wait_for_articles_to_load(lambda: self.webdriver.click_element_when_visible([dropdown_element, f'css:{self.SECTION_CHECKBOX_CSS_SELECTOR}[value^="{section}|"]']))
-            except Exception as e:
-                # Section might not exist for an specific search term
-                pass
+            # Identify the checkbox element to click by the start of the value property
+            checkbox_locator = [dropdown_element, f'css:{self.SECTION_CHECKBOX_CSS_SELECTOR}[value^="{section}|"]']
+            if self.webdriver.is_element_visible(checkbox_locator):
+                self.wait_for_articles_to_load(lambda: self.webdriver.click_element(checkbox_locator))
         
 
     def wait_for_articles_to_load(self, action):
@@ -47,7 +45,7 @@ class Results(Page):
         try:
             self.wait_for_articles_to_load(lambda: self.webdriver.click_element(self.SHOW_MORE_LOCATOR))
             return True
-        except:
+        except ElementNotFound:
             # Returns False if there are no more articles to load
             return False
 

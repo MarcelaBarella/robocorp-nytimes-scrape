@@ -2,6 +2,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from pages.nytimes.nytimes import NYTimes
 from RPA.Robocorp.WorkItems import WorkItems
+from SeleniumLibrary.errors import ElementNotFound
 
 def main():
     # Read input config
@@ -17,8 +18,9 @@ def main():
         # Need to accept GDPR otherwise the overlay can interfere with interactions
         try: 
             nytimes.accept_gdpr()
-        except:
+        except ElementNotFound:
             # GDPR terms might not appear depending on the session and locale
+            # and does not represent an error
             pass
         
         search_results = nytimes.search(config["search_phrase"])
@@ -39,6 +41,7 @@ def main():
         work_items.create_output_work_item({ "articles": articles, "config": config }, None, True)
 
     finally:
+        # Always close the browser
         nytimes.close_browser()
 
 def calculate_cut_date(months):

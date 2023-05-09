@@ -172,3 +172,5 @@ cython_debug/
 testrun/*
 .~lock*
 *.pkl
+
+output/

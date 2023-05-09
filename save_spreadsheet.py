@@ -9,6 +9,8 @@ import re
 import os
 
 # Transforms the data including new fields
+
+
 def main():
 
     work_items = WorkItems()
@@ -17,7 +19,7 @@ def main():
     files = work_items.get_work_item_files("*")
 
     articles = payload["articles"]
-    
+
     lib = Files()
     filename = "./output/articles.xlsx"
     lib.create_workbook(filename)
@@ -25,8 +27,10 @@ def main():
     lib.save_workbook()
     files.append(filename)
 
-    work_items.create_output_work_item({ "articles": articles }, files, True)
+    work_items.create_output_work_item({"articles": articles}, files, True)
 
-# Call the main() function, checking that we are running as a stand-alone script:
+
+# Call the main() function, checking that
+# we are running as a stand-alone script:
 if __name__ == "__main__":
     main()

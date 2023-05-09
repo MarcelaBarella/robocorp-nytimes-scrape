@@ -1,8 +1,9 @@
 from RPA.Browser.Selenium import Selenium
 
+
 class Page:
     def __init__(self, webdriver: Selenium = None):
-        if (webdriver != None):
+        if (webdriver is not None):
             self.webdriver = webdriver
         else:
             self.webdriver = Selenium()

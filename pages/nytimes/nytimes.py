@@ -1,6 +1,7 @@
 from pages.page import Page
 from pages.nytimes.results import Results
 
+
 class NYTimes(Page):
 
     URL = "https://www.nytimes.com"
@@ -18,7 +19,9 @@ class NYTimes(Page):
 
     def accept_gdpr(self):
         self.webdriver.click_element(self.GDPR_ACCEPT_LOCATOR)
-        self.webdriver.wait_for_condition(f"return !document.querySelector('{self.GDPR_DOCK_CSS_SELECTOR}').classList.contains('show')")
+        self.webdriver.wait_for_condition(
+            f"return !document.querySelector('{self.GDPR_DOCK_CSS_SELECTOR}')\
+                .classList.contains('show')")
 
     def search(self, term):
         self.webdriver.click_element(self.SEARCH_BUTTON_LOCATOR)

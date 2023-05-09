@@ -1,30 +1,27 @@
 from pages.page import Page
 from pages.nytimes.results import Results
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
 
 class NYTimes(Page):
 
     URL = "https://www.nytimes.com"
 
-    SEARCH_BUTTON_SELECTOR = '[data-test-id="search-button"]'
-    SEARCH_INPUT_SELECTOR = '[data-testid="search-input"]'
-    SEARCH_SUBMIT_SELECTOR = '[data-test-id="search-submit"]'
-    GDPR_ACCEPT_SELECTOR = '[data-testid="GDPR-accept"]'
-    GDPR_DOCK = '[data-testid="gdpr-dock"]'
+    GDPR_DOCK_CSS_SELECTOR = '[data-testid="gdpr-dock"]'
+
+    SEARCH_BUTTON_LOCATOR = 'data:test-id:search-button'
+    SEARCH_INPUT_LOCATOR = 'data:testid:search-input'
+    SEARCH_SUBMIT_LOCATOR = 'data:test-id:search-submit'
+    GDPR_ACCEPT_LOCATOR = 'data:testid:GDPR-accept'
+    GDPR_DOCK_LOCATOR = f'css:{GDPR_DOCK_CSS_SELECTOR}'
 
     def open(self):
         super().open(self.URL)
 
     def accept_gdpr(self):
-        gdpr_dock = self.webdriver.find_element(By.CSS_SELECTOR, self.GDPR_DOCK)
-        self.webdriver.find_element(By.CSS_SELECTOR, self.GDPR_ACCEPT_SELECTOR).click()
-        waiter = WebDriverWait(self.webdriver, 5)
-        waiter.until(lambda webdriver: not "show" in gdpr_dock.get_attribute("class"))
+        self.webdriver.click_element(self.GDPR_ACCEPT_LOCATOR)
+        self.webdriver.wait_for_condition(f"return !document.querySelector('{self.GDPR_DOCK_CSS_SELECTOR}').classList.contains('show')")
 
     def search(self, term):
-        self.webdriver.find_element(By.CSS_SELECTOR, self.SEARCH_BUTTON_SELECTOR).click()
-        self.webdriver.find_element(By.CSS_SELECTOR, self.SEARCH_INPUT_SELECTOR).send_keys(term)
-        self.webdriver.find_element(By.CSS_SELECTOR, self.SEARCH_SUBMIT_SELECTOR).click()
-        return Results(self.webdriver);
+        self.webdriver.click_element(self.SEARCH_BUTTON_LOCATOR)
+        self.webdriver.press_keys(self.SEARCH_INPUT_LOCATOR, term)
+        self.webdriver.click_element(self.SEARCH_SUBMIT_LOCATOR)
+        return Results(self.webdriver)

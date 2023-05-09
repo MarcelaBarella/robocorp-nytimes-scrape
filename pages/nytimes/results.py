@@ -1,69 +1,62 @@
-from datetime import datetime
 from pages.page import Page
 from pages.nytimes.article import Article
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
+from SeleniumLibrary.errors import ElementNotFound
 
 class Results(Page):
 
-    ARTICLES_SELECTOR = '[data-testid="search-bodega-result"]'
-    SORT_BY_SELECTOR = '[data-testid="SearchForm-sortBy"]'
-    SECTION_DROPDOWN_SELECTOR = '[data-testid="section"]'
-    SECTION_CHECKBOX_SELECTOR = 'input[type="checkbox"]'
-    SHOW_MORE_SELECTOR = '[data-testid="search-show-more-button"]'
+    ARTICLES_CONTAINER_CSS_SELECTOR = '[data-testid="search-results"]'
+    SECTION_CHECKBOX_CSS_SELECTOR = 'input[type="checkbox"]'
+
+    ARTICLES_LOCATOR = 'data:testid:search-bodega-result'
+    SORT_BY_LOCATOR = 'data:testid:SearchForm-sortBy'
+    SECTION_DROPDOWN_LOCATOR = 'data:testid:section'
+    SHOW_MORE_LOCATOR = 'data:testid:search-show-more-button'
 
     def sort_by(self, by):
-        select_element = self.webdriver.find_element(By.CSS_SELECTOR, self.SORT_BY_SELECTOR)
-        select = Select(select_element)
-
-        if select.first_selected_option == by:
-            # Already sorted by the right criteria, return
-            return
-        
-        self.wait_for_articles_to_load(lambda: select.select_by_value(by))
+        self.wait_for_articles_to_load(lambda: self.webdriver.select_from_list_by_value(self.SORT_BY_LOCATOR, by))
     
     def filter_sections(self, sections):
-        sections_dropdown = self.webdriver.find_element(By.CSS_SELECTOR, self.SECTION_DROPDOWN_SELECTOR)
-        sections_dropdown.click()
+        dropdown_element = self.webdriver.find_element(self.SECTION_DROPDOWN_LOCATOR)
+        self.webdriver.click_element(self.SECTION_DROPDOWN_LOCATOR)
         for section in sections:
             try:
-                self.wait_for_articles_to_load(lambda: sections_dropdown.find_element(By.CSS_SELECTOR, self.SECTION_CHECKBOX_SELECTOR + f'[value^="{section}|"]').click())
-            except NoSuchElementException:
+                # Identify the checkbox element to click by the start of the value property
+                self.wait_for_articles_to_load(lambda: self.webdriver.click_element_when_visible([dropdown_element, f'css:{self.SECTION_CHECKBOX_CSS_SELECTOR}[value^="{section}|"]']))
+            except Exception as e:
                 # Section might not exist for an specific search term
                 pass
         
 
-    def wait_for_articles_to_load(self, func):
-        initial_articles = self.webdriver.find_element(By.CSS_SELECTOR, self.ARTICLES_SELECTOR).text
-        func()
-        waiter = WebDriverWait(self.webdriver, 5)
+    def wait_for_articles_to_load(self, action):
+        
+        # Saves the combined text of current articles in a global variable
+        self.webdriver.execute_javascript(f"window.initial_articles_content = document.querySelector('{self.ARTICLES_CONTAINER_CSS_SELECTOR}').innerText")
+        
+        # Runs the action
+        action()
+
         try:
-            waiter.until(lambda webdriver: webdriver.find_element(By.CSS_SELECTOR, self.ARTICLES_SELECTOR).text != initial_articles)
-        except:
+            # Wait until articles have changed (comparing innerText property of the container)
+            self.webdriver.wait_for_condition(f"return document.querySelector('{self.ARTICLES_CONTAINER_CSS_SELECTOR}').innerText != window.initial_articles_content")
+        except AssertionError:
             # A timeout might happen if the filter/sort applied has no effect on the list of articles
             # and it shouldn't halt the scrapping
             pass
 
     def load_more_articles(self):
         try:
-            print("load_more_articles")
-            show_more = self.webdriver.find_element(By.CSS_SELECTOR, self.SHOW_MORE_SELECTOR)
-            self.wait_for_articles_to_load(lambda: show_more.click())
+            self.wait_for_articles_to_load(lambda: self.webdriver.click_element(self.SHOW_MORE_LOCATOR))
             return True
-        except Exception as e:
-            print("load_more_articles exception")
-            print(e)
+        except:
             # Returns False if there are no more articles to load
             return False
 
     @property
     def articles(self):
         articles = []
-        article_elements = self.webdriver.find_elements(By.CSS_SELECTOR, self.ARTICLES_SELECTOR)
+        article_elements = self.webdriver.find_elements(self.ARTICLES_LOCATOR)
         for article_element in article_elements:
-            article = Article(article_element)
+            article = Article(self.webdriver, article_element)
             articles.append({
                 "title": article.title,
                 "date": article.date,
